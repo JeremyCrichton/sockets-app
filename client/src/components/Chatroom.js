@@ -1,18 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import socketIOClient from 'socket.io-client';
+
+import ChatForm from './ChatForm';
 
 const Chatroom = () => {
-  const [serverResponse, setServerResponse] = useState();
+  const [serverMessages, setServerMessages] = useState([]);
+  const socketRef = useRef();
 
   useEffect(() => {
-    fetch('/api')
-      .then(res => res.json())
-      .then(data => setServerResponse(data));
+    socketRef.current = socketIOClient('/');
+
+    socketRef.current.on('server message', data => {
+      setServerMessages(messages => [...messages, data]);
+    });
   }, []);
+
+  const sendToServer = message => {
+    socketRef.current.emit('client message', message);
+    console.log(message);
+  };
 
   return (
     <div>
       <h2>Chatroom</h2>
-      <p>Server says: {serverResponse && serverResponse.message}</p>
+      <ul>
+        {serverMessages && serverMessages.map(message => <li>{message}</li>)}
+      </ul>
+      <ChatForm sendMessage={sendToServer} />
     </div>
   );
 };
