@@ -52,12 +52,13 @@ io.on('connection', socket => {
   // socket.broadcast.emit('server message', {id: uuid.v4(), message: 'Someone connected.'});
 
   // When a new user connects, set the user name and send a welcome message
-  socket.on('user joined', ({ username }) => {
+  socket.on('user joined', ({ id, username }) => {
     if (!socket.username) {
+      socket.userid = id;
       socket.username = username;
       numUsers += 1;
       socket.emit('server message', {
-        id: uuid.v4(),
+        id,
         message: `Hi ${username}!`,
       });
       io.emit('users update', { numUsers });

@@ -9,6 +9,7 @@ const Chatroom = () => {
   const [serverMessages, setServerMessages] = useState([]);
   const [typing, setTyping] = useState(null);
   const [numUsers, setNumUsers] = useState(0);
+  const [currentUser, setCurrentUser] = useState();
   const socketRef = useRef();
   let theTimeout;
   const TYPING_TIMER_LENGTH = 2000;
@@ -47,7 +48,9 @@ const Chatroom = () => {
   };
 
   const handleSetUsername = username => {
-    username && socketRef.current.emit('user joined', { username });
+    const id = uuid();
+    username && setCurrentUser({ id, username });
+    username && socketRef.current.emit('user joined', { id, username });
   };
 
   const handleUserTyped = () => {
@@ -61,16 +64,27 @@ const Chatroom = () => {
 
   return (
     <div>
-      <h2>Enter Your Name</h2>
-      <Entrance setUsername={handleSetUsername} />
-      <h2>Number of users: {numUsers}</h2>
-      <h2>Chatroom</h2>
-      <ul>
-        {serverMessages &&
-          serverMessages.map(({ id, message }) => <li key={id}>{message}</li>)}
-      </ul>
-      <div>{typing && `${typing.username} is typing`}</div>
-      <ChatForm sendMessage={sendToServer} userTyped={handleUserTyped} />
+      {currentUser && <h4>Signed in as {currentUser.username}</h4>}
+      {!currentUser && (
+        <div>
+          <h2>Enter Your Name</h2>
+          <Entrance setUsername={handleSetUsername} />
+        </div>
+      )}
+      {currentUser && (
+        <div>
+          <h2>Number of users: {numUsers}</h2>
+          <h2>Chatroom</h2>
+          <ul>
+            {serverMessages &&
+              serverMessages.map(({ id, message }) => (
+                <li key={id}>{message}</li>
+              ))}
+          </ul>
+          <div>{typing && `${typing.username} is typing`}</div>
+          <ChatForm sendMessage={sendToServer} userTyped={handleUserTyped} />
+        </div>
+      )}
     </div>
   );
 };
