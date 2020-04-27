@@ -11,6 +11,7 @@ const express = require('express');
 const path = require('path');
 const http = require('http');
 const socketIO = require('socket.io');
+const uuid = require('uuid');
 
 const app = express();
 const server = http.createServer(app);
@@ -37,38 +38,50 @@ server.listen(port, () => {
   console.log(`Server listening on port ${[port]}`);
 });
 
+/**
+ * CHATROOM
+ */
+
+let numUsers = 0;
+
 // A socket with namespace "connection" for new sockets
 io.on('connection', socket => {
   console.log('a user connected');
 
   // Send a message from the socket that just connected to all others
-  socket.broadcast.emit('server message', 'Someone connected.');
+  // socket.broadcast.emit('server message', {id: uuid.v4(), message: 'Someone connected.'});
 
-  // Send a message to a newly connected user
+  // When a new user connects, set the user name and send a welcome message
   socket.on('user joined', ({ username }) => {
-    socket.emit('server message', `Hi ${username}!`);
+    if (!socket.username) {
+      socket.username = username;
+      numUsers += 1;
+      socket.emit('server message', {
+        id: uuid.v4(),
+        message: `Hi ${username}!`,
+      });
+      io.emit('users update', { numUsers });
+    }
   });
 
   // Listen on a new namespace "new message" for incoming messages
-  socket.on('client message', msg => {
+  socket.on('client message', ({ id, message }) => {
     // Broadcast to all sockets except the one that sent the message
-    socket.broadcast.emit('server message', msg);
+    socket.broadcast.emit('server message', { id, message });
   });
 
   // Listen for someone typing
   socket.on('someone typed', () => {
-    console.log('message from server: someone typed');
-    socket.broadcast.emit('notify typing');
+    socket.broadcast.emit('notify typing', { username: socket.username });
   });
 
   // Listen for stop typing
   socket.on('stop typing', () => {
-    console.log('message from server: stop typing');
     socket.broadcast.emit('notify stop typing');
   });
 
   socket.on('disconnect', () => {
     console.log('a user disconnected');
-    socket.broadcast.emit('server message', 'someone disconnected');
+    // socket.broadcast.emit('server message', 'someone disconnected');
   });
 });
