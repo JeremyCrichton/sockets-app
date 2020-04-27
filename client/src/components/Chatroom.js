@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import socketIOClient from 'socket.io-client';
+import { v4 as uuid } from 'uuid';
 
 import ChatForm from './ChatForm';
 import Entrance from './Entrance';
 
 const Chatroom = () => {
   const [serverMessages, setServerMessages] = useState([]);
-  const [typing, setTyping] = useState(false);
+  const [typing, setTyping] = useState(null);
+  const [numUsers, setNumUsers] = useState(0);
   const socketRef = useRef();
   let theTimeout;
   const TYPING_TIMER_LENGTH = 2000;
@@ -23,19 +25,25 @@ const Chatroom = () => {
       setServerMessages(messages => [...messages, data]);
     });
 
-    socketRef.current.on('notify typing', () => {
-      setTyping(true);
+    socketRef.current.on('users update', data => {
+      setNumUsers(data.numUsers);
+    });
+
+    socketRef.current.on('notify typing', ({ username }) => {
+      console.log(username);
+      setTyping({ username });
     });
 
     socketRef.current.on('notify stop typing', () => {
       console.log('Received stop typing');
-      setTyping(false);
+      setTyping(null);
     });
   }, []);
 
   const sendToServer = message => {
-    setServerMessages(messages => [...messages, message]);
-    socketRef.current.emit('client message', message);
+    const id = uuid();
+    setServerMessages(messages => [...messages, { id, message }]);
+    socketRef.current.emit('client message', { id, message });
   };
 
   const handleSetUsername = username => {
@@ -55,11 +63,13 @@ const Chatroom = () => {
     <div>
       <h2>Enter Your Name</h2>
       <Entrance setUsername={handleSetUsername} />
+      <h2>Number of users: {numUsers}</h2>
       <h2>Chatroom</h2>
       <ul>
-        {serverMessages && serverMessages.map(message => <li>{message}</li>)}
+        {serverMessages &&
+          serverMessages.map(({ id, message }) => <li key={id}>{message}</li>)}
       </ul>
-      <div>{typing && 'Someone is typing...'}</div>
+      <div>{typing && `${typing.username} is typing`}</div>
       <ChatForm sendMessage={sendToServer} userTyped={handleUserTyped} />
     </div>
   );
