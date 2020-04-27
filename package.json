@@ -1,0 +1,15 @@
+{
+  "name": "sockets-app",
+  "version": "1.0.0",
+  "description": "A realtime messaging app",
+  "main": "index.js",
+  "author": "Jeremy Crichton",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}
