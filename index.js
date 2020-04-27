@@ -2,11 +2,6 @@
  * Express Application
  */
 
-// import express from 'express';
-// import path from 'path';
-// import http from 'http';
-// import socketIO from 'socket.io';
-
 const express = require('express');
 const path = require('path');
 const http = require('http');
@@ -47,6 +42,8 @@ let numUsers = 0;
 // A socket with namespace "connection" for new sockets
 io.on('connection', socket => {
   console.log('a user connected');
+  numUsers += 1;
+  io.emit('users update', { numUsers });
 
   // Send a message from the socket that just connected to all others
   // socket.broadcast.emit('server message', {id: uuid.v4(), message: 'Someone connected.'});
@@ -56,12 +53,10 @@ io.on('connection', socket => {
     if (!socket.username) {
       socket.userid = id;
       socket.username = username;
-      numUsers += 1;
       socket.emit('server message', {
         id,
         message: `Hi ${username}!`,
       });
-      io.emit('users update', { numUsers });
     }
   });
 
@@ -83,6 +78,8 @@ io.on('connection', socket => {
 
   socket.on('disconnect', () => {
     console.log('a user disconnected');
+    numUsers -= 1;
+    io.emit('users update', { numUsers });
     // socket.broadcast.emit('server message', 'someone disconnected');
   });
 });

@@ -1,69 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
-import socketIOClient from 'socket.io-client';
-import { v4 as uuid } from 'uuid';
+import React from 'react';
+import useChat from '../hooks/useChat';
 
 import ChatForm from './ChatForm';
 import Entrance from './Entrance';
 
 const Chatroom = () => {
-  const [serverMessages, setServerMessages] = useState([]);
-  const [typing, setTyping] = useState(null);
-  const [numUsers, setNumUsers] = useState(0);
-  const [currentUser, setCurrentUser] = useState();
-  const socketRef = useRef();
-  let theTimeout;
-  const TYPING_TIMER_LENGTH = 2000;
-
-  // Set up sockets on mount
-  useEffect(() => {
-    const endpoint =
-      process.env.NODE_ENV === 'development' ? 'http://localhost:4000/' : '/';
-
-    socketRef.current = socketIOClient(endpoint);
-
-    socketRef.current.on('server message', data => {
-      console.log('Msg from server: ', data);
-      setServerMessages(messages => [...messages, data]);
-    });
-
-    socketRef.current.on('users update', data => {
-      setNumUsers(data.numUsers);
-    });
-
-    socketRef.current.on('notify typing', ({ username }) => {
-      console.log(username);
-      setTyping({ username });
-    });
-
-    socketRef.current.on('notify stop typing', () => {
-      console.log('Received stop typing');
-      setTyping(null);
-    });
-  }, []);
-
-  const sendToServer = message => {
-    const id = uuid();
-    setServerMessages(messages => [...messages, { id, message }]);
-    socketRef.current.emit('client message', { id, message });
-  };
-
-  const handleSetUsername = username => {
-    const id = uuid();
-    username && setCurrentUser({ id, username });
-    username && socketRef.current.emit('user joined', { id, username });
-  };
-
-  const handleUserTyped = () => {
-    socketRef.current.emit('someone typed');
-    clearTimeout(theTimeout);
-
-    theTimeout = setTimeout(() => {
-      socketRef.current.emit('stop typing');
-    }, TYPING_TIMER_LENGTH);
-  };
+  const {
+    numUsers,
+    currentUser,
+    serverMessages,
+    typing,
+    sendToServer,
+    handleSetUsername,
+    handleUserTyped,
+  } = useChat();
 
   return (
     <div>
+      <h2>Number of users: {numUsers}</h2>
       {currentUser && <h4>Signed in as {currentUser.username}</h4>}
       {!currentUser && (
         <div>
@@ -73,7 +27,6 @@ const Chatroom = () => {
       )}
       {currentUser && (
         <div>
-          <h2>Number of users: {numUsers}</h2>
           <h2>Chatroom</h2>
           <ul>
             {serverMessages &&
