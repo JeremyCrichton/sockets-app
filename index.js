@@ -2,13 +2,19 @@
  * Express Application
  */
 
-const express = require('express');
-const app = express();
-const path = require('path');
-const server = require('http').createServer(app);
+// import express from 'express';
+// import path from 'path';
+// import http from 'http';
+// import socketIO from 'socket.io';
 
-// Create a socket-io server
-const io = require('socket.io')(server);
+const express = require('express');
+const path = require('path');
+const http = require('http');
+const socketIO = require('socket.io');
+
+const app = express();
+const server = http.createServer(app);
+const io = socketIO(server);
 
 const port = process.env.PORT || 4000;
 
@@ -37,6 +43,11 @@ io.on('connection', socket => {
 
   // Send a message from the socket that just connected to all others
   socket.broadcast.emit('server message', 'Someone connected.');
+
+  // Send a message to a newly connected user
+  socket.on('user joined', ({ username }) => {
+    socket.emit('server message', `Hi ${username}!`);
+  });
 
   // Listen on a new namespace "new message" for incoming messages
   socket.on('client message', msg => {

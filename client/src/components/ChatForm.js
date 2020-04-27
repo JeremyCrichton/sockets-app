@@ -7,6 +7,7 @@ const ChatForm = ({ sendMessage }) => {
     e.preventDefault();
 
     sendMessage(message);
+    setMessage('');
   };
 
   return (

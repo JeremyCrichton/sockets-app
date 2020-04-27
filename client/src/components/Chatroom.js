@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import socketIOClient from 'socket.io-client';
 
 import ChatForm from './ChatForm';
+import Entrance from './Entrance';
 
 const Chatroom = () => {
   const [serverMessages, setServerMessages] = useState([]);
   const socketRef = useRef();
 
+  // Set up sockets on mount
   useEffect(() => {
     socketRef.current = socketIOClient('/');
 
@@ -20,8 +22,14 @@ const Chatroom = () => {
     console.log(message);
   };
 
+  const handleSetUsername = username => {
+    socketRef.current.emit('user joined', { username });
+  };
+
   return (
     <div>
+      <h2>Enter Your Name</h2>
+      <Entrance setUsername={handleSetUsername} />
       <h2>Chatroom</h2>
       <ul>
         {serverMessages && serverMessages.map(message => <li>{message}</li>)}
