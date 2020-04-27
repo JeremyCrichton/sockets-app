@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const ChatForm = ({ sendMessage }) => {
+const ChatForm = ({ sendMessage, userTyped }) => {
   const [message, setMessage] = useState('');
 
   const handleSubmit = e => {
@@ -10,9 +10,14 @@ const ChatForm = ({ sendMessage }) => {
     setMessage('');
   };
 
+  const handleChange = e => {
+    setMessage(e.target.value);
+    userTyped();
+  };
+
   return (
     <form onSubmit={handleSubmit}>
-      <input value={message} onChange={e => setMessage(e.target.value)} />
+      <input value={message} onChange={handleChange} />
     </form>
   );
 };

@@ -51,9 +51,20 @@ io.on('connection', socket => {
 
   // Listen on a new namespace "new message" for incoming messages
   socket.on('client message', msg => {
-    // console.log(`Message received: ID: ${msg.id}, Message: ${msg.content}`);
-    // Broadcast to all sockets including the one that sent the message
-    io.emit('server message', msg);
+    // Broadcast to all sockets except the one that sent the message
+    socket.broadcast.emit('server message', msg);
+  });
+
+  // Listen for someone typing
+  socket.on('someone typed', () => {
+    console.log('message from server: someone typed');
+    socket.broadcast.emit('notify typing');
+  });
+
+  // Listen for stop typing
+  socket.on('stop typing', () => {
+    console.log('message from server: stop typing');
+    socket.broadcast.emit('notify stop typing');
   });
 
   socket.on('disconnect', () => {
