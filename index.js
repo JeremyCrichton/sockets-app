@@ -15,7 +15,7 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 
 // Endpoint
 app.get('/api', (req, res) => {
-  res.send('<h1>Hello World!</h1>');
+  res.json({ message: 'Hi from the server!' });
 });
 
 // The "catchall" handler for any request that doesn't match above
