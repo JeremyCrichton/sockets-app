@@ -41,45 +41,43 @@ let numUsers = 0;
 
 // A socket with namespace "connection" for new sockets
 io.on('connection', socket => {
-  console.log('a user connected');
   numUsers += 1;
   io.emit('users update', { numUsers });
 
-  // Send a message from the socket that just connected to all others
-  // socket.broadcast.emit('server message', {id: uuid.v4(), message: 'Someone connected.'});
-
-  // When a new user connects, set the user name and send a welcome message
-  socket.on('user joined', ({ id, username }) => {
+  // When a new user connects, set the username, room, and send a welcome message
+  socket.on('user joined', ({ id, username, room }) => {
     if (!socket.username) {
       socket.userid = id;
       socket.username = username;
+      socket.room = room;
       socket.emit('server message', {
         id,
         message: `Hi ${username}!`,
       });
+      socket.join(room);
     }
   });
 
-  // Listen on a new namespace "new message" for incoming messages
+  // Listen on a new namespace "client message" for incoming messages
   socket.on('client message', ({ id, message }) => {
-    // Broadcast to all sockets except the one that sent the message
-    socket.broadcast.emit('server message', { id, message });
+    // Broadcast to all sockets (other than sender) in sending socket's room
+    socket.broadcast.to(socket.room).emit('server message', { id, message });
   });
 
   // Listen for someone typing
   socket.on('someone typed', () => {
-    socket.broadcast.emit('notify typing', { username: socket.username });
+    socket.broadcast
+      .to(socket.room)
+      .emit('notify typing', { username: socket.username });
   });
 
   // Listen for stop typing
   socket.on('stop typing', () => {
-    socket.broadcast.emit('notify stop typing');
+    socket.broadcast.to(socket.room).emit('notify stop typing');
   });
 
   socket.on('disconnect', () => {
-    console.log('a user disconnected');
     numUsers -= 1;
     io.emit('users update', { numUsers });
-    // socket.broadcast.emit('server message', 'someone disconnected');
   });
 });
