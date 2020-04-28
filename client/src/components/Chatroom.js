@@ -1,9 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import socketIOClient from 'socket.io-client';
 import { v4 as uuid } from 'uuid';
+import styled from 'styled-components';
 
 import ChatForm from './ChatForm';
 import Entrance from './Entrance';
+import Header from './Header';
+
+const Container = styled.div`
+  max-width: 1000px;
+  margin: 0 auto;
+  background: #212121;
+  color: white;
+`;
+
+const Section = styled.section`
+  padding: 4rem;
+`;
 
 const Chatroom = () => {
   const [serverMessages, setServerMessages] = useState([]);
@@ -13,8 +26,8 @@ const Chatroom = () => {
 
   const socketRef = useRef();
 
-  let typingTimeout;
   const TYPING_TIMER_LENGTH = 2000;
+  let typingTimeout;
 
   useEffect(() => {
     const endpoint =
@@ -65,28 +78,33 @@ const Chatroom = () => {
   };
 
   return (
-    <div>
-      <h2>Number of users: {numUsers}</h2>
-      {currentUser && <h4>Signed in as {currentUser.username}</h4>}
-      {!currentUser && (
-        <div>
-          <Entrance submitUserDetails={handleJoinRoom} />
-        </div>
-      )}
-      {currentUser && (
-        <div>
-          <h2>Chatroom</h2>
-          <ul>
-            {serverMessages &&
-              serverMessages.map(({ id, message }) => (
-                <li key={id}>{message}</li>
-              ))}
-          </ul>
-          <div>{typing && `${typing.username} is typing`}</div>
-          <ChatForm sendMessage={sendToServer} userTyped={handleUserTyped} />
-        </div>
-      )}
-    </div>
+    <Container>
+      <Header
+        numUsers={numUsers}
+        username={currentUser && currentUser.username}
+      />
+      <Section>
+        {currentUser && <h4>Signed in as {currentUser.username}</h4>}
+        {!currentUser && (
+          <div>
+            <Entrance submitUserDetails={handleJoinRoom} />
+          </div>
+        )}
+        {currentUser && (
+          <div>
+            <h2>Chatroom</h2>
+            <ul>
+              {serverMessages &&
+                serverMessages.map(({ id, message }) => (
+                  <li key={id}>{message}</li>
+                ))}
+            </ul>
+            <div>{typing && `${typing.username} is typing`}</div>
+            <ChatForm sendMessage={sendToServer} userTyped={handleUserTyped} />
+          </div>
+        )}
+      </Section>
+    </Container>
   );
 };
 
