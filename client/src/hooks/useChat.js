@@ -8,56 +8,50 @@ const useChat = () => {
   const [typing, setTyping] = useState(null);
   const [currentUser, setCurrentUser] = useState();
 
-  const socketRef = useRef();
-
+  const endpoint =
+    process.env.NODE_ENV === 'development' ? 'http://localhost:4000/' : '/';
+  const socket = socketIOClient(endpoint);
   let typingTimeout;
   const TYPING_TIMER_LENGTH = 2000;
 
-  useEffect(() => {
-    const endpoint =
-      process.env.NODE_ENV === 'development' ? 'http://localhost:4000/' : '/';
+  socket.on('server message', data => {
+    console.log('Msg from server: ', data);
+    setServerMessages(messages => [...messages, data]);
+  });
 
-    socketRef.current = socketIOClient(endpoint);
+  socket.on('users update', data => {
+    setNumUsers(data.numUsers);
+  });
 
-    socketRef.current.on('server message', data => {
-      console.log('Msg from server: ', data);
-      setServerMessages(messages => [...messages, data]);
-    });
+  socket.on('notify typing', ({ username }) => {
+    console.log(username);
+    setTyping({ username });
+  });
 
-    socketRef.current.on('users update', data => {
-      setNumUsers(data.numUsers);
-    });
-
-    socketRef.current.on('notify typing', ({ username }) => {
-      console.log(username);
-      setTyping({ username });
-    });
-
-    socketRef.current.on('notify stop typing', () => {
-      console.log('Received stop typing');
-      setTyping(null);
-    });
-  }, []);
+  socket.on('notify stop typing', () => {
+    console.log('Received stop typing');
+    setTyping(null);
+  });
 
   const sendToServer = message => {
     const id = uuid();
     setServerMessages(messages => [...messages, { id, message }]);
-    socketRef.current.emit('client message', { id, message });
-    socketRef.current.emit('stop typing');
+    socket.emit('client message', { id, message });
+    socket.emit('stop typing');
   };
 
   const handleSetUsername = username => {
     const id = uuid();
     username && setCurrentUser({ id, username });
-    username && socketRef.current.emit('user joined', { id, username });
+    username && socket.emit('user joined', { id, username });
   };
 
   const handleUserTyped = () => {
-    socketRef.current.emit('someone typed');
+    socket.emit('someone typed');
     clearTimeout(typingTimeout);
 
     typingTimeout = setTimeout(() => {
-      socketRef.current.emit('stop typing');
+      socket.emit('stop typing');
     }, TYPING_TIMER_LENGTH);
   };
 
