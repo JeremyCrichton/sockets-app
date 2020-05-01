@@ -12,10 +12,39 @@ const Container = styled.div`
   margin: 0 auto;
   background: #212121;
   color: white;
+  display: flex;
+  flex-direction: column;
 `;
 
-const Section = styled.section`
-  padding: 4rem;
+const ChatSection = styled.section`
+  height: 70vh;
+  position: relative;
+  padding: 2rem 1rem 1rem 1rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  color: black;
+`;
+
+const ChatHistory = styled.div`
+  height: 60vh;
+  padding: 0 1rem;
+  flex-grow: 1;
+  background-color: white;
+  overflow-y: scroll;
+`;
+
+const ChatList = styled.ul`
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  /* overflow-y: scroll; */
+`;
+
+const ChatFormContainer = styled.div`
+  margin-top: 1rem;
+  width: 100%;
 `;
 
 const Chatroom = () => {
@@ -83,27 +112,32 @@ const Chatroom = () => {
         numUsers={numUsers}
         username={currentUser && currentUser.username}
       />
-      <Section>
-        {currentUser && <h4>Signed in as {currentUser.username}</h4>}
-        {!currentUser && (
+      <ChatSection>
+        {false && !currentUser && (
           <div>
             <Entrance submitUserDetails={handleJoinRoom} />
           </div>
         )}
-        {currentUser && (
-          <div>
-            <h2>Chatroom</h2>
-            <ul>
-              {serverMessages &&
-                serverMessages.map(({ id, message }) => (
-                  <li key={id}>{message}</li>
-                ))}
-            </ul>
-            <div>{typing && `${typing.username} is typing`}</div>
-            <ChatForm sendMessage={sendToServer} userTyped={handleUserTyped} />
-          </div>
+        {true && (
+          <>
+            <ChatHistory>
+              <ChatList>
+                {serverMessages &&
+                  serverMessages.map(({ id, message }) => (
+                    <li key={id}>{message}</li>
+                  ))}
+              </ChatList>
+              {typing && <div>{typing && `${typing.username} is typing`}</div>}
+            </ChatHistory>
+            <ChatFormContainer>
+              <ChatForm
+                sendMessage={sendToServer}
+                userTyped={handleUserTyped}
+              />
+            </ChatFormContainer>
+          </>
         )}
-      </Section>
+      </ChatSection>
     </Container>
   );
 };
